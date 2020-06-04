@@ -103,7 +103,7 @@ def get_and_preprocess_german(params):
 	POSITIVE_OUTCOME = params.positive_outcome
 	NEGATIVE_OUTCOME = params.negative_outcome	
 
-	X = pd.read_csv("fooling_lime/data/german_processed.csv")
+	X = pd.read_csv("data/german_processed.csv")
 	y = X["GoodCustomer"]
 
 	X = X.drop(["GoodCustomer", "PurposeOfLoan"], axis=1)
