@@ -172,9 +172,14 @@ def main():
 
         if args.save_model:
             torch.save(model.state_dict(), "vae_lime.pt")
-        # with torch.no_grad():
-        # sample = torch.randn(64, 20).to(device)
-        # sample = model.decode(sample).cpu()
+        with torch.no_grad():
+            sample = torch.randn(3, 4).to(device)
+            sample = model.decode(sample).cpu()
+            
+            # TODO Inverse transform not one-hot ?!
+            inversed = ss.inverse_transform(sample)
+            print(sample)
+            print(inversed)
         """
         save_image(sample.view(64, 1, 28, 28),
                    'results/sample_' + str(epoch) + '.png')
