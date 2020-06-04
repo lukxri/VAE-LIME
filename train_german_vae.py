@@ -15,11 +15,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from utils import *
-from get_data import *
+from fooling_lime.utils import *
+from fooling_lime.get_data import *
 
 # Set up experiment parameters
-params = Params("model_configurations/experiment_params.json")
+params = Params("fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_and_preprocess_german(params)
 
 features = [c for c in X]
@@ -65,15 +65,7 @@ device = torch.device("cuda" if args.cuda else "cpu")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-# TODO data loader usage
-"""train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=True, download=True,
-                   transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-    batch_size=args.batch_size, shuffle=True, **kwargs)"""
-
+# Prepare data loader
 xtrain = torch.from_numpy(xtrain)
 ytrain = torch.from_numpy(ytrain)
 xtest = torch.from_numpy(xtest)
@@ -89,6 +81,7 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
+        # TODO neural net hyper-parameters
         self.fc1 = nn.Linear(28, 14)
         self.fc21 = nn.Linear(14, 4)
         self.fc22 = nn.Linear(14, 4)
@@ -171,17 +164,22 @@ def test(epoch):
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
 
-if __name__ == "__main__":
+
+def main():
     for epoch in range(1, args.epochs + 1):
         train(epoch)
         test(epoch)
 
         if args.save_model:
             torch.save(model.state_dict(), "vae_lime.pt")
-        with torch.no_grad():
-            #sample = torch.randn(64, 20).to(device)
-            #sample = model.decode(sample).cpu()
-            """
-            save_image(sample.view(64, 1, 28, 28),
-                       'results/sample_' + str(epoch) + '.png')
-            """
+        # with torch.no_grad():
+        # sample = torch.randn(64, 20).to(device)
+        # sample = model.decode(sample).cpu()
+        """
+        save_image(sample.view(64, 1, 28, 28),
+                   'results/sample_' + str(epoch) + '.png')
+        """
+
+
+if __name__ == "__main__":
+    main()
