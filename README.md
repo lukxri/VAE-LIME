@@ -9,6 +9,7 @@ Seminar "Explainable and Fair Machine Learning" - Summer Term 2020 - University 
     * Has the the PCA data distribution improved? 
     * Can VAE-LIME explain the adversarial attack?
 
-Sources:  
+---
+## Sources:  
 pytorch vae example: [Link](https://github.com/pytorch/examples/tree/master/vae)
-fooling lime : [Link](https://github.com/dylan-slack/Fooling-LIME-SHAP)
+fooling lime: [Link](https://github.com/dylan-slack/Fooling-LIME-SHAP)
