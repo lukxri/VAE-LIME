@@ -15,12 +15,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from fooling_lime.utils import *
-from fooling_lime.get_data import *
+from fooling_lime import get_data, utils
 
 # Set up experiment parameters
-params = Params("fooling_lime/model_configurations/experiment_params.json")
-X, y, cols = get_and_preprocess_german(params)
+params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
+X, y, cols = get_data.get_and_preprocess_german(params)
 
 features = [c for c in X]
 
@@ -30,11 +29,11 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 X = X.values
 
 xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
-ss = StandardScaler().fit(xtrain)
-xtrain = ss.transform(xtrain)
-xtest = ss.transform(xtest)
+# ss = StandardScaler().fit(xtrain)
+# xtrain = ss.transform(xtrain)
+# xtest = ss.transform(xtest)
 
-#mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
+# mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
 
 """categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
                'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
@@ -54,7 +53,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--save-model', action='store_true', default=False,
+parser.add_argument('--save-model', action='store_true', default=True,
                     help='For Saving the current Model')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -64,6 +63,11 @@ torch.manual_seed(args.seed)
 device = torch.device("cuda" if args.cuda else "cpu")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
+
+xtrain = np.delete(xtrain, [3, 4, 5, 6, 7, 8, 9], axis=1)
+# ytrain = np.delete(ytrain, [3, 4, 5, 6, 7, 8, 9])
+xtest = np.delete(xtest, [3, 4, 5, 6, 7, 8, 9], axis=1)
+# ytest = np.delete(ytest, [3, 4, 5, 6, 7, 8, 9])
 
 # Prepare data loader
 xtrain = torch.from_numpy(xtrain)
@@ -77,32 +81,39 @@ test_dataset = TensorDataset(xtest, ytest)
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 
+
 class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
         # TODO neural net hyper-parameters
-        self.fc1 = nn.Linear(28, 14)
-        self.fc21 = nn.Linear(14, 4)
-        self.fc22 = nn.Linear(14, 4)
-        self.fc3 = nn.Linear(4, 14)
-        self.fc4 = nn.Linear(14, 28)
+        """self.fc1 = nn.Linear(28, 400)
+        self.fc21 = nn.Linear(400, 20)
+        self.fc22 = nn.Linear(400, 20)
+        self.fc3 = nn.Linear(20, 400)
+        self.fc4 = nn.Linear(400, 28)"""
+
+        self.fc1 = nn.Linear(21, 60)
+        self.fc21 = nn.Linear(60, 30)
+        self.fc22 = nn.Linear(60, 30)
+        self.fc3 = nn.Linear(30, 60)
+        self.fc4 = nn.Linear(60, 21)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
         return self.fc21(h1), self.fc22(h1)
 
     def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5*logvar)
+        std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
-        return mu + eps*std
+        return mu + eps * std
 
     def decode(self, z):
         h3 = F.relu(self.fc3(z))
         return torch.sigmoid(self.fc4(h3))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 28))
+        mu, logvar = self.encode(x.view(-1, 21))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
@@ -113,7 +124,7 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28), reduction='sum')
+    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -138,11 +149,11 @@ def train(epoch):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
+                       100. * batch_idx / len(train_loader),
+                       loss.item() / len(data)))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
+        epoch, train_loss / len(train_loader.dataset)))
 
 
 def test(epoch):
@@ -171,15 +182,16 @@ def main():
         test(epoch)
 
         if args.save_model:
-            torch.save(model.state_dict(), "vae_lime.pt")
+            torch.save(model.state_dict(), "vae_lime_testing.pt")
         with torch.no_grad():
-            sample = torch.randn(3, 4).to(device)
+            sample = torch.randn(3, 30).to(device)
             sample = model.decode(sample).cpu()
-            
+            s = [np.round(i, 0) for i in sample]
+            print(s)
             # TODO Inverse transform not one-hot ?!
-            inversed = ss.inverse_transform(sample)
-            print(sample)
-            print(inversed)
+            # inversed = ss.inverse_transform(sample)
+            # print(sample)
+            # print(inversed)
         """
         save_image(sample.view(64, 1, 28, 28),
                    'results/sample_' + str(epoch) + '.png')
