@@ -183,12 +183,12 @@ def main():
         test(epoch)
 
         if args.save_model:
-            torch.save(model.state_dict(), "vae_lime_testing.pt")
+            torch.save(model.state_dict(), "vae_lime.pt")
 
 
 
     with torch.no_grad():
-        sample = torch.randn(5, 20).to(device)
+        sample = torch.randn(5, 30).to(device)
         sample = model.decode(sample).cpu()
 
         # TODO Inverse transform not one-hot ?!

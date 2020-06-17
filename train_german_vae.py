@@ -182,7 +182,7 @@ def main():
         test(epoch)
 
         if args.save_model:
-            torch.save(model.state_dict(), "vae_lime_testing.pt")
+            torch.save(model.state_dict(), "vae_lime.pt")
         with torch.no_grad():
             sample = torch.randn(3, 30).to(device)
             sample = model.decode(sample).cpu()
