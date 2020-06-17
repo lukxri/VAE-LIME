@@ -13,7 +13,7 @@ from torch.nn import functional as F
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from fooling_lime import get_data, utils
 
@@ -27,11 +27,12 @@ gender_indc = features.index('Gender')
 loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 
 X = X.values
-
+scaler = MinMaxScaler().fit(X)
+X = scaler.transform(X)
 xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
-# ss = StandardScaler().fit(xtrain)
-# xtrain = ss.transform(xtrain)
-# xtest = ss.transform(xtest)
+#scaler = MinMaxScaler().fit(X)
+#xtrain = scaler.transform(xtrain)
+#xtest = scaler.transform(xtest)
 
 # mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
 
@@ -64,9 +65,9 @@ device = torch.device("cuda" if args.cuda else "cpu")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-xtrain = np.delete(xtrain, [3, 4, 5, 6, 7, 8, 9], axis=1)
+#xtrain = np.delete(xtrain, [3, 4, 5, 6, 7, 8, 9], axis=1)
 # ytrain = np.delete(ytrain, [3, 4, 5, 6, 7, 8, 9])
-xtest = np.delete(xtest, [3, 4, 5, 6, 7, 8, 9], axis=1)
+#xtest = np.delete(xtest, [3, 4, 5, 6, 7, 8, 9], axis=1)
 # ytest = np.delete(ytest, [3, 4, 5, 6, 7, 8, 9])
 
 # Prepare data loader
@@ -93,11 +94,11 @@ class VAE(nn.Module):
         self.fc3 = nn.Linear(20, 400)
         self.fc4 = nn.Linear(400, 28)"""
 
-        self.fc1 = nn.Linear(21, 60)
-        self.fc21 = nn.Linear(60, 30)
-        self.fc22 = nn.Linear(60, 30)
-        self.fc3 = nn.Linear(30, 60)
-        self.fc4 = nn.Linear(60, 21)
+        self.fc1 = nn.Linear(28, 60)
+        self.fc21 = nn.Linear(60, 1)
+        self.fc22 = nn.Linear(60, 1)
+        self.fc3 = nn.Linear(1, 60)
+        self.fc4 = nn.Linear(60, 28)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -113,7 +114,7 @@ class VAE(nn.Module):
         return torch.sigmoid(self.fc4(h3))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 21))
+        mu, logvar = self.encode(x.view(-1, 28))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
@@ -151,9 +152,11 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
                        loss.item() / len(data)))
+            print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset)))
+    print("Mu: {} \t logvar: {}".format(mu, logvar))
 
 
 def test(epoch):
@@ -182,20 +185,25 @@ def main():
         test(epoch)
 
         if args.save_model:
-            torch.save(model.state_dict(), "vae_lime.pt")
-        with torch.no_grad():
-            sample = torch.randn(3, 30).to(device)
-            sample = model.decode(sample).cpu()
-            s = [np.round(i, 0) for i in sample]
-            print(s)
-            # TODO Inverse transform not one-hot ?!
-            # inversed = ss.inverse_transform(sample)
-            # print(sample)
-            # print(inversed)
-        """
-        save_image(sample.view(64, 1, 28, 28),
-                   'results/sample_' + str(epoch) + '.png')
-        """
+            torch.save(model.state_dict(), "vae_lime_german.pt")
+
+
+
+    with torch.no_grad():
+        sample = torch.randn(5, 1).to(device)
+        sample = model.decode(sample).cpu()
+
+        # TODO Inverse transform not one-hot ?!
+        inversed = scaler.inverse_transform(sample)
+        np.set_printoptions(suppress=True)
+        #print(sample)
+        #print(inversed)
+
+        s = [np.round(i, 0) for i in inversed]
+        for a in s:
+            print(a)
+
+        # TODO Test how unique the samples truly are
 
 
 if __name__ == "__main__":

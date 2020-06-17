@@ -4,9 +4,9 @@ The experiment MAIN for GERMAN.
 import warnings
 warnings.filterwarnings('ignore') 
 
-from adversarial_models import * 
-from utils import *
-from get_data import *
+from fooling_lime.adversarial_models import *
+from fooling_lime.utils import *
+from fooling_lime.get_data import *
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -14,8 +14,8 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 
-from ../lime-master.lime import *
-from ../lime-master.lime import lime_tabular
+from lime.lime import *
+from lime.lime import lime_tabular
 #import lime
 #import lime.lime_tabular
 import shap
@@ -25,7 +25,7 @@ from sklearn.cluster import KMeans
 from copy import deepcopy
 
 # Set up experiment parameters
-params = Params("model_configurations/experiment_params.json")
+params = Params("fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_and_preprocess_german(params)
 
 features = [c for c in X]
@@ -85,7 +85,7 @@ def experiment_main():
 
 	# Train the adversarial model for LIME with f and psi 
 	adv_lime = Adversarial_Lime_Model(racist_model_f(), innocuous_model_psi()).train(xtrain, ytrain, feature_names=features, perturbation_multiplier=30, categorical_features=categorical)
-	adv_explainer = lime.lime_tabular.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
+	adv_explainer = lime_tabular.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
                                                
 	explanations = []
 	for i in range(xtest.shape[0]):
