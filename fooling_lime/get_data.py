@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from fooling_lime.utils import Params
+from utils import Params
 
 def get_and_preprocess_compas_data(params):
 	"""Handle processing of COMPAS according to: https://github.com/propublica/compas-analysis
