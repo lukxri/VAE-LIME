@@ -9,7 +9,7 @@ from fooling_lime.utils import *
 from fooling_lime.get_data import *
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 import numpy as np
 import pandas as pd
@@ -95,7 +95,7 @@ def experiment_main():
 	print (experiment_summary(explanations, features))
 	print ("Fidelity:", round(adv_lime.fidelity(xtest),2))
 
-	
+	"""
 	print ('---------------------')
 	print ('Beginning SHAP GERMAN Experiments....')
 	print ('---------------------')
@@ -116,7 +116,7 @@ def experiment_main():
 	print (experiment_summary(formatted_explanations, features))
 	print ("Fidelity:",round(adv_shap.fidelity(xtest),2))
 
-	print ('---------------------')
+	print ('---------------------')"""
 
 if __name__ == "__main__":
 	experiment_main()

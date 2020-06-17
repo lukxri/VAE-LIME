@@ -1,0 +1,10 @@
+/home/lukas/anaconda3/envs/eml_seminar/bin/python3 /home/lukas/SynologyDrive/Uni/Master/2nd_Semester_SS20/Explainable_and_Fair_Machine_Learning/VAE-LIME/german_experiment_vae_lime.py
+---------------------
+Beginning LIME GERMAN Experiments....
+(These take some time to run because we have to generate explanations for every point in the test set)
+---------------------
+LIME Ranks and Pct Occurances (1 corresponds to most important feature) for one unrelated feature:
+{1: [('LoanRateAsPercentOfIncome', 1.0)], 2: [('CheckingAccountBalance_geq_0', 0.02), ('CheckingAccountBalance_geq_200', 0.08), ('CriticalAccountOrLoansElsewhere', 0.01), ('ForeignWorker', 0.17), ('HasCoapplicant', 0.18), ('HasGuarantor', 0.1), ('JobClassIsSkilled', 0.02), ('MissedPayments', 0.07), ('NoCurrentLoan', 0.15), ('OtherLoansAtBank', 0.02), ('OwnsHouse', 0.03), ('RentsHouse', 0.01), ('SavingsAccountBalance_geq_100', 0.01), ('SavingsAccountBalance_geq_500', 0.02), ('Unemployed', 0.08), ('YearsAtCurrentJob_lt_1', 0.03)], 3: [('CheckingAccountBalance_geq_200', 0.06), ('CriticalAccountOrLoansElsewhere', 0.01), ('ForeignWorker', 0.11), ('Gender', 0.02), ('HasCoapplicant', 0.09), ('HasGuarantor', 0.13), ('JobClassIsSkilled', 0.02), ('MissedPayments', 0.04), ('NoCurrentLoan', 0.17), ('OtherLoansAtBank', 0.06), ('RentsHouse', 0.02), ('SavingsAccountBalance_geq_100', 0.05), ('SavingsAccountBalance_geq_500', 0.05), ('Unemployed', 0.12), ('YearsAtCurrentJob_geq_4', 0.01), ('YearsAtCurrentJob_lt_1', 0.04)]}
+Fidelity: 1.0
+
+Process finished with exit code 0
