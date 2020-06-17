@@ -16,10 +16,9 @@ import pandas as pd
 
 # use modified lime package of the repository here, not the pip version!
 from lime.lime import *
-from lime.lime import lime_tabular
-import shap
+from lime.lime import lime_tabular_with_vae
 
-from sklearn.cluster import KMeans 
+from sklearn.cluster import KMeans
 
 from copy import deepcopy
 
@@ -84,7 +83,7 @@ def experiment_main():
 
 	# Train the adversarial model for LIME with f and psi 
 	adv_lime = Adversarial_Lime_Model(racist_model_f(), innocuous_model_psi()).train(xtrain, ytrain, feature_names=features, perturbation_multiplier=30, categorical_features=categorical)
-	adv_explainer = lime_tabular.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
+	adv_explainer = lime_tabular_with_vae.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
                                                
 	explanations = []
 	for i in range(xtest.shape[0]):

@@ -27,10 +27,13 @@ gender_indc = features.index('Gender')
 loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 
 X = X.values
+
+# TODO Fit different scalers to categorial and numerical data
 scaler = MinMaxScaler().fit(X)
 X = scaler.transform(X)
 xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
-#scaler = MinMaxScaler().fit(X)
+
+#scaler = MinMaxScaler().fit(xtrain)
 #xtrain = scaler.transform(xtrain)
 #xtest = scaler.transform(xtest)
 
@@ -95,9 +98,9 @@ class VAE(nn.Module):
         self.fc4 = nn.Linear(400, 28)"""
 
         self.fc1 = nn.Linear(28, 60)
-        self.fc21 = nn.Linear(60, 1)
-        self.fc22 = nn.Linear(60, 1)
-        self.fc3 = nn.Linear(1, 60)
+        self.fc21 = nn.Linear(60, 30)
+        self.fc22 = nn.Linear(60, 30)
+        self.fc3 = nn.Linear(30, 60)
         self.fc4 = nn.Linear(60, 28)
 
     def encode(self, x):
@@ -152,11 +155,12 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
                        loss.item() / len(data)))
-            print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
+            #print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset)))
-    print("Mu: {} \t logvar: {}".format(mu, logvar))
+    print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
+    #print("Mu: {} \t logvar: {}".format(mu[0].mean(), logvar[0].mean()))
 
 
 def test(epoch):
@@ -190,7 +194,9 @@ def main():
 
 
     with torch.no_grad():
-        sample = torch.randn(5, 1).to(device)
+        print("___________________________________________")
+        print("Generating 5 new data points using the VAE:\n")
+        sample = torch.randn(5, 30).to(device)
         sample = model.decode(sample).cpu()
 
         # TODO Inverse transform not one-hot ?!
