@@ -5,7 +5,7 @@ future==0.18.2
 imageio==2.6.1
 joblib==0.14.0
 kiwisolver==1.1.0
-#lime==0.1.1.36
+#lime==0.1.1.36 # only use this in order to compare results with the pip lime. Not needed atm.
 matplotlib==3.1.1
 networkx==2.4
 numpy==1.17.3

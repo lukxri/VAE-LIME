@@ -14,10 +14,9 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 
+# use modified lime package of the repository here, not the pip version!
 from lime.lime import *
 from lime.lime import lime_tabular
-#import lime
-#import lime.lime_tabular
 import shap
 
 from sklearn.cluster import KMeans 
