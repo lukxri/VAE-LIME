@@ -502,6 +502,7 @@ class LimeTabularExplainer(object):
             # TODO Idea: Encode data row once, and sample from generated latent space.
             sample = model.decode(sample).cpu()
             data = sample.numpy().reshape(num_samples, num_cols)
+            #data = [np.round(i, 0) for i in data]
         ##############################################
 
         # TODO Replace N(0,1) sampling by VAE decoding
@@ -520,13 +521,15 @@ class LimeTabularExplainer(object):
         data[0] = data_row.copy()
         inverse = data.copy()
         for column in categorical_features:
+            data[:, column] = np.round(data[:, column])
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
 
             # TODO Replace this since the inverse column gets sampled as well
             # TODO Sample the categorical features differently from the numerical?? Maybe this could improve the model?
-            inverse_column = self.random_state.choice(values, size=num_samples,
-                                                      replace=True, p=freqs)
+            #inverse_column = self.random_state.choice(values, size=num_samples,
+                                                      #replace=True, p=freqs)
+            inverse_column = data[:, column]
             binary_column = (inverse_column == first_row[column]).astype(int)
             binary_column[0] = 1
             inverse_column[0] = data[0, column]
