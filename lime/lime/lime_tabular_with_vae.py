@@ -337,7 +337,8 @@ class LimeTabularExplainer(object):
         if sp.sparse.issparse(data_row) and not sp.sparse.isspmatrix_csr(data_row):
             # Preventative code: if sparse, convert to csr format if not in csr format already
             data_row = data_row.tocsr()
-        data, inverse = self.__data_inverse(data_row, num_samples)
+        #data, inverse = self.__data_inverse(data_row, num_samples)
+        data, inverse = self.__data_inverse_vae_sampling(data_row, num_samples)
         if sp.sparse.issparse(data):
             # Note in sparse case we don't subtract mean since data would become dense
             scaled_data = data.multiply(self.scaler.scale_)
@@ -465,6 +466,75 @@ class LimeTabularExplainer(object):
 
         return ret_exp
 
+
+    def __data_inverse_vae_sampling(self, data_row, num_samples):
+        """
+        Returns:
+            data:       First row is same as data_row. Categorical features are binary
+                        (1 if they are the same as data_row, 0 if they differ). Numerical features stay the same.
+            inverse:    Same as data, but the categorical features are not compared to data_row, but stay as is.
+        """
+        import torch
+        import torch.utils.data
+        from torch import nn, optim
+        from torch.nn import functional as F
+
+        num_cols = data_row.shape[0]
+        data = np.zeros((num_samples, num_cols))
+        categorical_features = range(num_cols)
+        instance_sample = data_row
+        scale = self.scaler.scale_
+        mean = self.scaler.mean_
+
+        ##############################################
+        from train_german_vae import VAE
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        model = VAE().to(device)
+        model.load_state_dict(torch.load("vae_lime_german.pt"))
+        model.eval()
+
+        with torch.no_grad():
+            #print("___________________________________________")
+            #print("Generating 5 new data points using the VAE:\n")
+            sample = torch.randn(num_samples, 30).to(device)
+
+            # TODO Idea: Encode data row once, and sample from generated latent space.
+            sample = model.decode(sample).cpu()
+            data = sample.numpy().reshape(num_samples, num_cols)
+        ##############################################
+
+        # TODO Replace N(0,1) sampling by VAE decoding
+        #data = self.random_state.normal(
+        #    0, 1, num_samples * num_cols).reshape(
+        #    num_samples, num_cols)
+        if self.sample_around_instance:
+            data = data * scale + instance_sample
+        else:
+            data = data * scale + mean
+
+        # TODO Convert categorical sample columns to 0-1
+        # Decide how to handle scaling here. I want to keep the scaling as is.
+        categorical_features = self.categorical_features
+        first_row = data_row
+        data[0] = data_row.copy()
+        inverse = data.copy()
+        for column in categorical_features:
+            values = self.feature_values[column]
+            freqs = self.feature_frequencies[column]
+
+            # TODO Replace this since the inverse column gets sampled as well
+            # TODO Sample the categorical features differently from the numerical?? Maybe this could improve the model?
+            inverse_column = self.random_state.choice(values, size=num_samples,
+                                                      replace=True, p=freqs)
+            binary_column = (inverse_column == first_row[column]).astype(int)
+            binary_column[0] = 1
+            inverse_column[0] = data[0, column]
+            data[:, column] = binary_column
+            inverse[:, column] = inverse_column
+        inverse[0] = data_row
+        return data, inverse
+
     def __data_inverse(self,
                        data_row,
                        num_samples):
@@ -509,7 +579,7 @@ class LimeTabularExplainer(object):
                 instance_sample = data_row[:, non_zero_indexes]
                 scale = scale[non_zero_indexes]
                 mean = mean[non_zero_indexes]
-            
+
             #TODO Replace N(0,1) sampling by VAE decoding
             data = self.random_state.normal(
                 0, 1, num_samples * num_cols).reshape(
@@ -542,7 +612,7 @@ class LimeTabularExplainer(object):
         for column in categorical_features:
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
-            
+
             #TODO Does this need to be replaced aswell?
             inverse_column = self.random_state.choice(values, size=num_samples,
                                                       replace=True, p=freqs)
