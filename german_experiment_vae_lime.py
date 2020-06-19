@@ -34,7 +34,7 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 X = X.values
 
 xtrain,xtest,ytrain,ytest = train_test_split(X,y,test_size=0.1)
-ss = StandardScaler().fit(xtrain)
+ss = MinMaxScaler().fit(xtrain)
 xtrain = ss.transform(xtrain)
 xtest = ss.transform(xtest)
 
