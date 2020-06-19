@@ -14,8 +14,8 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 
-from ../lime-master.lime import *
-from ../lime-master.lime import lime_tabular
+from lime.lime import *
+from lime.lime import lime_tabular
 #import lime
 #import lime.lime_tabular
 import shap
