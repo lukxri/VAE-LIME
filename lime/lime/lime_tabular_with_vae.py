@@ -337,8 +337,10 @@ class LimeTabularExplainer(object):
         if sp.sparse.issparse(data_row) and not sp.sparse.isspmatrix_csr(data_row):
             # Preventative code: if sparse, convert to csr format if not in csr format already
             data_row = data_row.tocsr()
-        #data, inverse = self.__data_inverse(data_row, num_samples)
-        data, inverse = self.__data_inverse_vae_sampling(data_row, num_samples)
+
+        # TODO CHANCE HERE TO DEBUG
+        #data, inverse = self.__data_inverse(data_row, num_samples) # old sampling
+        data, inverse = self.__data_inverse_vae_sampling(data_row, num_samples) # new sampling
         if sp.sparse.issparse(data):
             # Note in sparse case we don't subtract mean since data would become dense
             scaled_data = data.multiply(self.scaler.scale_)
@@ -469,11 +471,32 @@ class LimeTabularExplainer(object):
 
     def __data_inverse_vae_sampling(self, data_row, num_samples):
         """
+        New sampling method which makes use of the trained variational autoencoder.
+
+        Args:
+            data_row: 1d numpy array, corresponding to a row
+            num_samples: size of the neighborhood to learn the linear model
+
+        Returns:
+            A tuple (data, inverse), where:
+                data: dense num_samples * K matrix, where categorical features
+                are encoded with either 0 (not equal to the corresponding value
+                in data_row) or 1. The first row is the original instance.
+                inverse: same as data, except the categorical features are not
+                binary, but categorical (as the original data)
+
         Returns:
             data:       First row is same as data_row. Categorical features are binary
                         (1 if they are the same as data_row, 0 if they differ). Numerical features stay the same.
             inverse:    Same as data, but the categorical features are not compared to data_row, but stay as is.
         """
+
+        # TODO NEXT STEPS
+        # Fehlersuche
+        # PCA anschauen
+        # Point of interest encoding
+        # Andere Datensätze
+
         import torch
         import torch.utils.data
         from torch import nn, optim
@@ -505,7 +528,6 @@ class LimeTabularExplainer(object):
             #data = [np.round(i, 0) for i in data]
         ##############################################
 
-        # TODO Replace N(0,1) sampling by VAE decoding
         #data = self.random_state.normal(
         #    0, 1, num_samples * num_cols).reshape(
         #    num_samples, num_cols)
@@ -516,6 +538,8 @@ class LimeTabularExplainer(object):
 
         # TODO Convert categorical sample columns to 0-1
         # Decide how to handle scaling here. I want to keep the scaling as is.
+        # They mainly exploited numerical values. Think about the implications here for our approach.
+
         categorical_features = self.categorical_features
         first_row = data_row
         data[0] = data_row.copy()
@@ -543,7 +567,6 @@ class LimeTabularExplainer(object):
                        num_samples):
         """Generates a neighborhood around a prediction.
 
-        TODO How is the differentiation between categorical and numerical handled for the german dataset?
         For numerical features, perturb them by sampling from a Normal(0,1) and
         doing the inverse operation of mean-centering and scaling, according to
         the means and stds in the training data. For categorical features,
@@ -583,7 +606,6 @@ class LimeTabularExplainer(object):
                 scale = scale[non_zero_indexes]
                 mean = mean[non_zero_indexes]
 
-            #TODO Replace N(0,1) sampling by VAE decoding
             data = self.random_state.normal(
                 0, 1, num_samples * num_cols).reshape(
                 num_samples, num_cols)
@@ -616,7 +638,6 @@ class LimeTabularExplainer(object):
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
 
-            #TODO Does this need to be replaced aswell?
             inverse_column = self.random_state.choice(values, size=num_samples,
                                                       replace=True, p=freqs)
             binary_column = (inverse_column == first_row[column]).astype(int)
