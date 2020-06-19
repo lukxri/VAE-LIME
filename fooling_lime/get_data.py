@@ -18,7 +18,10 @@ def get_and_preprocess_compas_data(params):
 	POSITIVE_OUTCOME = params.positive_outcome
 	NEGATIVE_OUTCOME = params.negative_outcome
 
-	compas_df = pd.read_csv("fooling_lime/data/compas-scores-two-years.csv", index_col=0)
+	try:
+		compas_df = pd.read_csv("fooling_lime/data/compas-scores-two-years.csv", index_col=0)
+	except FileNotFoundError:
+		compas_df = pd.read_csv("data/compas-scores-two-years.csv", index_col=0)
 	compas_df = compas_df.loc[(compas_df['days_b_screening_arrest'] <= 30) &
 							  (compas_df['days_b_screening_arrest'] >= -30) &
 							  (compas_df['is_recid'] != -1) &
@@ -60,7 +63,10 @@ def get_and_preprocess_cc(params):
 	POSITIVE_OUTCOME = params.positive_outcome
 	NEGATIVE_OUTCOME = params.negative_outcome
 
-	X = pd.read_csv("fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
+	try:
+		X = pd.read_csv("fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
+	except FileNotFoundError:
+		X = pd.read_csv("data/communities_and_crime_new_version.csv", index_col=0)
 	
 	# everything over 50th percentil gets negative outcome (lots of crime is bad)
 	high_violent_crimes_threshold = 50
@@ -103,7 +109,11 @@ def get_and_preprocess_german(params):
 	POSITIVE_OUTCOME = params.positive_outcome
 	NEGATIVE_OUTCOME = params.negative_outcome	
 
-	X = pd.read_csv("fooling_lime/data/german_processed.csv")
+	try:
+		X = pd.read_csv("fooling_lime/data/german_processed.csv")
+	except FileNotFoundError:
+		X = pd.read_csv("data/german_processed.csv")
+
 	y = X["GoodCustomer"]
 
 	X = X.drop(["GoodCustomer", "PurposeOfLoan"], axis=1)

@@ -28,6 +28,19 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 
 X = X.values
 
+train_only_numerical = True
+if train_only_numerical:
+    categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
+                   'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
+                   'MissedPayments', 'NoCurrentLoan', 'CriticalAccountOrLoansElsewhere', 'OtherLoansAtBank',
+                   'OtherLoansAtStore', 'HasCoapplicant', 'HasGuarantor', 'OwnsHouse', 'RentsHouse', 'Unemployed',
+                   'YearsAtCurrentJob_lt_1', 'YearsAtCurrentJob_geq_4', 'JobClassIsSkilled']
+    categorical = [features.index(c) for c in categorical]
+    X = np.delete(X, categorical, axis=1)
+    num_cols = 7
+else:
+    num_cols = 28
+
 # TODO Fit different scalers to categorial and numerical data
 scaler = MinMaxScaler().fit(X)
 X = scaler.transform(X)
@@ -38,13 +51,6 @@ xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
 #xtest = scaler.transform(xtest)
 
 # mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
-
-"""categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
-               'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
-               'MissedPayments', 'NoCurrentLoan', 'CriticalAccountOrLoansElsewhere', 'OtherLoansAtBank',
-               'OtherLoansAtStore', 'HasCoapplicant', 'HasGuarantor', 'OwnsHouse', 'RentsHouse', 'Unemployed',
-               'YearsAtCurrentJob_lt_1', 'YearsAtCurrentJob_geq_4', 'JobClassIsSkilled']
-categorical = [features.index(c) for c in categorical]"""
 
 parser = argparse.ArgumentParser(description='VAE LIME')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -87,9 +93,10 @@ test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True,
 
 
 class VAE(nn.Module):
-    def __init__(self):
+    def __init__(self, num_cols):
         super(VAE, self).__init__()
 
+        self.num_cols = num_cols
         # TODO neural net hyper-parameters
         """self.fc1 = nn.Linear(28, 400)
         self.fc21 = nn.Linear(400, 20)
@@ -97,11 +104,11 @@ class VAE(nn.Module):
         self.fc3 = nn.Linear(20, 400)
         self.fc4 = nn.Linear(400, 28)"""
 
-        self.fc1 = nn.Linear(28, 60)
+        self.fc1 = nn.Linear(self.num_cols, 60)
         self.fc21 = nn.Linear(60, 30)
         self.fc22 = nn.Linear(60, 30)
         self.fc3 = nn.Linear(30, 60)
-        self.fc4 = nn.Linear(60, 28)
+        self.fc4 = nn.Linear(60, self.num_cols)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -117,12 +124,12 @@ class VAE(nn.Module):
         return torch.sigmoid(self.fc4(h3))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 28))
+        mu, logvar = self.encode(x.view(-1, self.num_cols))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
 
-model = VAE().to(device)
+model = VAE(num_cols).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 
@@ -189,14 +196,17 @@ def main():
         test(epoch)
 
         if args.save_model:
-            torch.save(model.state_dict(), "vae_lime_german.pt")
+            if train_only_numerical:
+                torch.save(model.state_dict(), "vae_lime_german_only_numerical.pt")
+            else:
+                torch.save(model.state_dict(), "vae_lime_german.pt")
 
 
 
     with torch.no_grad():
         print("___________________________________________")
         print("Generating 5 new data points using the VAE:\n")
-        sample = torch.randn(5, 30).to(device)
+        sample = torch.randn(10, 30).to(device)
         sample = model.decode(sample).cpu()
 
         # TODO Inverse transform not one-hot ?!
