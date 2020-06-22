@@ -13,13 +13,13 @@ import sklearn
 import sklearn.preprocessing
 from sklearn.utils import check_random_state
 
-from .discretize import QuartileDiscretizer
-from .discretize import DecileDiscretizer
-from .discretize import EntropyDiscretizer
-from .discretize import BaseDiscretizer
-from .discretize import StatsDiscretizer
-from . import explanation
-from . import lime_base
+from lime.lime.discretize import QuartileDiscretizer
+from lime.lime.discretize import DecileDiscretizer
+from lime.lime.discretize import EntropyDiscretizer
+from lime.lime.discretize import BaseDiscretizer
+from lime.lime.discretize import StatsDiscretizer
+from lime.lime import explanation
+from lime.lime import lime_base
 
 
 class TableDomainMapper(explanation.DomainMapper):
@@ -493,14 +493,16 @@ class LimeTabularExplainer(object):
 
         # TODO NEXT STEPS
         # Fehlersuche
-        # PCA anschauen
-        # Point of interest encoding
+        # PCA anschauen -> Overfit? -> Train default epochs. -> Did not improve anything.
+        # Point of interest encoding -> Makes no difference at all.
         # Andere Datensätze
 
-        import torch
+        # Diagramme erstellen
+
+        # Later: Categorical sampling improvements? https://blog.evjang.com/2016/11/tutorial-categorical-variational.html
+        # Or look into the numerical features only?
+
         import torch.utils.data
-        from torch import nn, optim
-        from torch.nn import functional as F
 
         num_cols = data_row.shape[0]
         data = np.zeros((num_samples, num_cols))
@@ -510,19 +512,26 @@ class LimeTabularExplainer(object):
         mean = self.scaler.mean_
 
         ##############################################
-        from train_german_vae import VAE
+        # TODO do not hardcode which vae to load here
+        from train_compas_vae import VAE
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         model = VAE(data_row.shape[0]).to(device)
-        model.load_state_dict(torch.load("vae_lime_german.pt"))
+        model.load_state_dict(torch.load("../../experiments/compas/vae_lime_compas.pt"))
         model.eval()
 
         with torch.no_grad():
-            #print("___________________________________________")
-            #print("Generating 5 new data points using the VAE:\n")
             sample = torch.randn(num_samples, 30).to(device)
 
-            # TODO Idea: Encode data row once, and sample from generated latent space.
+
+            # Test Idea: Encode data row once, and sample from generated latent space.
+            #x = np.asarray(data_row, dtype=np.float32)
+            #for i in range(num_samples):
+            #    sample, _, _ = model.forward(torch.from_numpy(x).to(device))
+            #    data[i] = sample.cpu().numpy().reshape(-1, num_cols)
+
+            # results do not differ from standard random sampling into decode
+
             sample = model.decode(sample).cpu()
             data = sample.numpy().reshape(num_samples, num_cols)
             #data = [np.round(i, 0) for i in data]
@@ -545,14 +554,14 @@ class LimeTabularExplainer(object):
         data[0] = data_row.copy()
         inverse = data.copy()
         for column in categorical_features:
+            #data[:, column] = utils.one_hot_encode(data[:, column])
             data[:, column] = np.round(data[:, column])
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
 
-            # TODO Replace this since the inverse column gets sampled as well
-            # TODO Sample the categorical features differently from the numerical?? Maybe this could improve the model?
+
             #inverse_column = self.random_state.choice(values, size=num_samples,
-                                                      #replace=True, p=freqs)
+            #                                          replace=True, p=freqs)
             inverse_column = data[:, column]
             binary_column = (inverse_column == first_row[column]).astype(int)
             binary_column[0] = 1
