@@ -64,7 +64,7 @@ def get_and_preprocess_cc(params):
 	NEGATIVE_OUTCOME = params.negative_outcome
 
 	try:
-		X = pd.read_csv("fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
+		X = pd.read_csv("../../fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
 	except FileNotFoundError:
 		X = pd.read_csv("data/communities_and_crime_new_version.csv", index_col=0)
 	

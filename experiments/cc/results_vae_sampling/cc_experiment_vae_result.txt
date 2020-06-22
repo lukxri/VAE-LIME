@@ -1,0 +1,11 @@
+Beginning LIME CC Experiments....
+(These take some time to run because we have to generate explanations for every point in the test set)
+---------------------
+LIME Ranks and Pct Occurances (1 corresponds to most important feature) for one unrelated feature:
+{1: [('Nothing shown', 1.0)], 2: [('Nothing shown', 1.0)], 3: [('Nothing shown', 1.0)]}
+Fidelity: 1.0
+LIME Ranks and Pct Occurances two unrelated features:
+{1: [('Nothing shown', 0.995), ('PctBornSameState numeric', 0.005)], 2: [('Nothing shown', 0.995), ('population numeric', 0.005)], 3: [('Nothing shown', 0.995), ('numbUrban numeric', 0.005)]}
+Fidelity: 1.0
+
+Process finished with exit code 0

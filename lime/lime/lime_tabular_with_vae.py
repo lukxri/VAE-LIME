@@ -495,7 +495,7 @@ class LimeTabularExplainer(object):
         # Fehlersuche
         # PCA anschauen -> Overfit? -> Train default epochs. -> Did not improve anything.
         # Point of interest encoding -> Makes no difference at all.
-        # Andere Datensätze
+        # Andere Datensätze -> COMPAS done. CC WIP
 
         # Diagramme erstellen
 
@@ -517,7 +517,7 @@ class LimeTabularExplainer(object):
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         model = VAE(data_row.shape[0]).to(device)
-        model.load_state_dict(torch.load("../../experiments/compas/vae_lime_compas.pt"))
+        model.load_state_dict(torch.load("../../experiments/cc/vae_lime_cc.pt"))
         model.eval()
 
         with torch.no_grad():
