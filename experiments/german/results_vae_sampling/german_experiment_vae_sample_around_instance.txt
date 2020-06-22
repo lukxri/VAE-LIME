@@ -1,0 +1,10 @@
+/home/lukas/anaconda3/envs/eml_seminar/bin/python3 /home/lukas/SynologyDrive/Uni/Master/2nd_Semester_SS20/Explainable_and_Fair_Machine_Learning/VAE-LIME/german_experiment_vae_lime.py
+---------------------
+Beginning LIME GERMAN Experiments....
+(These take some time to run because we have to generate explanations for every point in the test set)
+---------------------
+LIME Ranks and Pct Occurances (1 corresponds to most important feature) for one unrelated feature:
+{1: [('Age', 0.13), ('CheckingAccountBalance_geq_200', 0.04), ('ForeignWorker', 0.01), ('HasCoapplicant', 0.04), ('HasGuarantor', 0.03), ('JobClassIsSkilled', 0.14), ('LoanAmount', 0.04), ('LoanDuration', 0.15), ('LoanRateAsPercentOfIncome', 0.04), ('MissedPayments', 0.07), ('NoCurrentLoan', 0.02), ('NumberOfLiableIndividuals', 0.01), ('NumberOfOtherLoansAtBank', 0.09), ('OtherLoansAtBank', 0.15), ('SavingsAccountBalance_geq_500', 0.11), ('Unemployed', 0.02)], 2: [('Age', 0.15), ('CheckingAccountBalance_geq_200', 0.01), ('HasCoapplicant', 0.01), ('HasGuarantor', 0.02), ('JobClassIsSkilled', 0.04), ('LoanAmount', 0.05), ('LoanDuration', 0.22), ('LoanRateAsPercentOfIncome', 0.16), ('MissedPayments', 0.02), ('NoCurrentLoan', 0.05), ('NumberOfOtherLoansAtBank', 0.18), ('OtherLoansAtBank', 0.24), ('SavingsAccountBalance_geq_500', 0.01), ('Unemployed', 0.02)], 3: [('Age', 0.23), ('ForeignWorker', 0.01), ('LoanAmount', 0.15), ('LoanDuration', 0.2), ('LoanRateAsPercentOfIncome', 0.12), ('NumberOfLiableIndividuals', 0.04), ('NumberOfOtherLoansAtBank', 0.19), ('OtherLoansAtBank', 0.22), ('YearsAtCurrentHome', 0.03)]}
+Fidelity: 1.0
+
+Process finished with exit code 0

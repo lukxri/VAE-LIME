@@ -19,7 +19,7 @@ def get_and_preprocess_compas_data(params):
 	NEGATIVE_OUTCOME = params.negative_outcome
 
 	try:
-		compas_df = pd.read_csv("fooling_lime/data/compas-scores-two-years.csv", index_col=0)
+		compas_df = pd.read_csv("../../fooling_lime/data/compas-scores-two-years.csv", index_col=0)
 	except FileNotFoundError:
 		compas_df = pd.read_csv("data/compas-scores-two-years.csv", index_col=0)
 	compas_df = compas_df.loc[(compas_df['days_b_screening_arrest'] <= 30) &
