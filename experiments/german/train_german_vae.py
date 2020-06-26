@@ -18,7 +18,10 @@ from sklearn.preprocessing import MinMaxScaler
 from fooling_lime import get_data, utils
 
 # Set up experiment parameters
-params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
+try:
+    params = utils.Params("model_configurations/experiment_params.json")
+except FileNotFoundError:
+    params = utils.Params("../../fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_data.get_and_preprocess_german(params)
 
 features = [c for c in X]

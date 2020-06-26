@@ -5,9 +5,9 @@ from get_data import *
 from train_german_vae import VAE
 
 try:
-    params = Params("fooling_lime/model_configurations/experiment_params.json")
+    params = Params("model_configurations/experiment_params.json")
 except FileNotFoundError:
-    params = Params("fooling_lime/model_configurations/experiment_params.json")
+    params = Params("../../fooling_lime/model_configurations/experiment_params.json")
 
 X, y, cols = get_and_preprocess_german(params)
 features = [c for c in X]
@@ -27,12 +27,12 @@ if numerical_only:
     X = np.delete(X, categorical, axis=1)
 
     model = VAE(X.shape[1]).to(device)
-    model.load_state_dict(torch.load("experiments/german/vae_lime_german_only_numerical.pt"))
+    model.load_state_dict(torch.load("./vae_lime_german_only_numerical.pt"))
     model.eval()
 
 else:
     model = VAE(X.shape[1]).to(device)
-    model.load_state_dict(torch.load("experiments/german/vae_lime_german.pt"))
+    model.load_state_dict(torch.load("./vae_lime_german.pt"))
     model.eval()
 
 ss = MinMaxScaler().fit(X)
@@ -62,7 +62,7 @@ with torch.no_grad():
     X_p = data
     r.append(X_p)"""
 
-r = []
+"""r = []
 with torch.no_grad():
     # print("___________________________________________")
     # print("Generating 5 new data points using the VAE:\n")
@@ -77,9 +77,9 @@ with torch.no_grad():
     data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
     # data = ss.inverse_transform(data)
     X_p = data
-    r.append(X_p)
+    r.append(X_p)"""
 
-"""r = []
+r = []
 for _ in range(1):
     p = np.random.normal(0, 1, size=X.shape)
 
@@ -88,7 +88,7 @@ for _ in range(1):
     # 		row[c] = np.random.choice(X[:,c])
 
     X_p = X + p
-    r.append(X_p)"""
+    r.append(X_p)
 
 r = np.vstack(r)
 p = [1 for _ in range(len(r))]
@@ -100,7 +100,7 @@ all_y = np.array(p + iid)
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 
-pca = PCA(n_components=2)
+pca = PCA(n_components=2, random_state=1)
 results = pca.fit_transform(all_x)
 
 print(len(X))
@@ -108,6 +108,8 @@ print(len(X))
 plt.scatter(results[:500, 0], results[:500, 1], alpha=.3, c="r", label="VAE generated data")
 plt.scatter(results[-500:, 0], results[-500:, 1], alpha=.3, c="b", label="Original data")
 plt.legend()
+plt.xlim(-4,4)
+plt.ylim(-4,4)
 
 if numerical_only:
     plt.title("VAE-LIME German data | Numerical features")

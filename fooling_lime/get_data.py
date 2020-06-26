@@ -110,9 +110,9 @@ def get_and_preprocess_german(params):
 	NEGATIVE_OUTCOME = params.negative_outcome	
 
 	try:
-		X = pd.read_csv("fooling_lime/data/german_processed.csv")
-	except FileNotFoundError:
 		X = pd.read_csv("data/german_processed.csv")
+	except FileNotFoundError:
+		X = pd.read_csv("../../fooling_lime/data/german_processed.csv")
 
 	y = X["GoodCustomer"]
 
