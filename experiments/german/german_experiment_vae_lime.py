@@ -23,7 +23,10 @@ from sklearn.cluster import KMeans
 from copy import deepcopy
 
 # Set up experiment parameters
-params = Params("fooling_lime/model_configurations/experiment_params.json")
+try:
+    params = Params("fooling_lime/model_configurations/experiment_params.json")
+except FileNotFoundError:
+    params = Params("../../fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_and_preprocess_german(params)
 
 features = [c for c in X]

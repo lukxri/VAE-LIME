@@ -19,7 +19,7 @@ from fooling_lime import get_data, utils
 
 # Set up experiment parameters
 try:
-    params = utils.Params("model_configurations/experiment_params.json")
+    params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
 except FileNotFoundError:
     params = utils.Params("../../fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_data.get_and_preprocess_german(params)
@@ -31,7 +31,7 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 
 X = X.values
 
-train_only_numerical = False
+train_only_numerical = True
 if train_only_numerical:
     categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
                    'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
@@ -46,7 +46,7 @@ else:
 
 scaler = MinMaxScaler().fit(X)
 X = scaler.transform(X)
-xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
+xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.25)
 
 parser = argparse.ArgumentParser(description='VAE LIME')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -178,14 +178,14 @@ def main():
 
     if args.save_model:
         if train_only_numerical:
-            torch.save(model.state_dict(), "experiments/german/vae_lime_german_only_numerical.pt")
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_only_numerical_test2.pt")
         else:
-            torch.save(model.state_dict(), "experiments/german/vae_lime_german.pt")
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_test2.pt")
 
     with torch.no_grad():
         print("___________________________________________")
         print("Generating 5 new data points using the VAE:\n")
-        sample = torch.randn(10, 30).to(device)
+        sample = torch.randn(3, 30).to(device)
         sample = model.decode(sample).cpu()
 
         inversed = scaler.inverse_transform(sample)

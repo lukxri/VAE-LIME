@@ -492,13 +492,6 @@ class LimeTabularExplainer(object):
         """
 
         # TODO NEXT STEPS
-        # Fehlersuche
-        # PCA anschauen -> Overfit? -> Train default epochs. -> Did not improve anything.
-        # Point of interest encoding -> Makes no difference at all.
-        # Andere Datensätze -> COMPAS done. CC WIP
-
-        # Diagramme erstellen
-
         # Later: Categorical sampling improvements? https://blog.evjang.com/2016/11/tutorial-categorical-variational.html
         # Or look into the numerical features only?
 
@@ -512,8 +505,9 @@ class LimeTabularExplainer(object):
         mean = self.scaler.mean_
 
         ##############################################
+        # Insert VAE Sampling here
         # TODO do not hardcode which vae to load here
-        from train_compas_vae import VAE
+        from train_cc_vae import VAE
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         model = VAE(data_row.shape[0]).to(device)
@@ -562,7 +556,9 @@ class LimeTabularExplainer(object):
 
             #inverse_column = self.random_state.choice(values, size=num_samples,
             #                                          replace=True, p=freqs)
-            inverse_column = data[:, column]
+
+            # Here we NEED to copy!
+            inverse_column = data[:, column].copy()
             binary_column = (inverse_column == first_row[column]).astype(int)
             binary_column[0] = 1
             inverse_column[0] = data[0, column]

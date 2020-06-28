@@ -22,17 +22,17 @@ categorical = [features.index(c) for c in categorical]
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-numerical_only = False
+numerical_only = True
 if numerical_only:
     X = np.delete(X, categorical, axis=1)
 
     model = VAE(X.shape[1]).to(device)
-    model.load_state_dict(torch.load("./vae_lime_german_only_numerical.pt"))
+    model.load_state_dict(torch.load("./vae_lime_german_only_numerical_test2.pt"))
     model.eval()
 
 else:
     model = VAE(X.shape[1]).to(device)
-    model.load_state_dict(torch.load("./vae_lime_german.pt"))
+    model.load_state_dict(torch.load("./vae_lime_german_test2.pt"))
     model.eval()
 
 ss = MinMaxScaler().fit(X)
@@ -62,24 +62,22 @@ with torch.no_grad():
     X_p = data
     r.append(X_p)"""
 
-"""r = []
+r = []
 with torch.no_grad():
     # print("___________________________________________")
     # print("Generating 5 new data points using the VAE:\n")
     sample = torch.randn(num_samples, 30).to(device)
-
-    # TODO Idea: Encode data row once, and sample from generated latent space.
     sample = model.decode(sample).cpu()
 
     X = np.asarray(X, dtype=np.float32)
     data = sample.cpu().numpy().reshape(-1, num_cols)
 
-    data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
+    #data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
     # data = ss.inverse_transform(data)
     X_p = data
-    r.append(X_p)"""
+    r.append(X_p)
 
-r = []
+"""r = []
 for _ in range(1):
     p = np.random.normal(0, 1, size=X.shape)
 
@@ -88,7 +86,7 @@ for _ in range(1):
     # 		row[c] = np.random.choice(X[:,c])
 
     X_p = X + p
-    r.append(X_p)
+    r.append(X_p)"""
 
 r = np.vstack(r)
 p = [1 for _ in range(len(r))]
