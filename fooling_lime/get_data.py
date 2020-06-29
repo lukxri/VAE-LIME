@@ -19,7 +19,7 @@ def get_and_preprocess_compas_data(params):
 	NEGATIVE_OUTCOME = params.negative_outcome
 
 	try:
-		compas_df = pd.read_csv("fooling_lime/data/compas-scores-two-years.csv", index_col=0)
+		compas_df = pd.read_csv("../../fooling_lime/data/compas-scores-two-years.csv", index_col=0)
 	except FileNotFoundError:
 		compas_df = pd.read_csv("data/compas-scores-two-years.csv", index_col=0)
 	compas_df = compas_df.loc[(compas_df['days_b_screening_arrest'] <= 30) &
@@ -64,7 +64,7 @@ def get_and_preprocess_cc(params):
 	NEGATIVE_OUTCOME = params.negative_outcome
 
 	try:
-		X = pd.read_csv("fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
+		X = pd.read_csv("../../fooling_lime/data/communities_and_crime_new_version.csv", index_col=0)
 	except FileNotFoundError:
 		X = pd.read_csv("data/communities_and_crime_new_version.csv", index_col=0)
 	
@@ -110,9 +110,9 @@ def get_and_preprocess_german(params):
 	NEGATIVE_OUTCOME = params.negative_outcome	
 
 	try:
-		X = pd.read_csv("fooling_lime/data/german_processed.csv")
+		X = pd.read_csv("../../fooling_lime/data/german_processed.csv")
 	except FileNotFoundError:
-		X = pd.read_csv("data/german_processed.csv")
+		X = pd.read_csv("fooling_lime/data/german_processed.csv")
 
 	y = X["GoodCustomer"]
 

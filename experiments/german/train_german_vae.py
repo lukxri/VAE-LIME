@@ -13,12 +13,15 @@ from torch.nn import functional as F
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 
 from fooling_lime import get_data, utils
 
 # Set up experiment parameters
-params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
+try:
+    params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
+except FileNotFoundError:
+    params = utils.Params("../../fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_data.get_and_preprocess_german(params)
 
 features = [c for c in X]
@@ -41,16 +44,9 @@ if train_only_numerical:
 else:
     num_cols = 28
 
-# TODO Fit different scalers to categorial and numerical data
 scaler = MinMaxScaler().fit(X)
 X = scaler.transform(X)
-xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
-
-#scaler = MinMaxScaler().fit(xtrain)
-#xtrain = scaler.transform(xtrain)
-#xtest = scaler.transform(xtest)
-
-# mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
+xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.25)
 
 parser = argparse.ArgumentParser(description='VAE LIME')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -73,11 +69,6 @@ torch.manual_seed(args.seed)
 device = torch.device("cuda" if args.cuda else "cpu")
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-
-#xtrain = np.delete(xtrain, [3, 4, 5, 6, 7, 8, 9], axis=1)
-# ytrain = np.delete(ytrain, [3, 4, 5, 6, 7, 8, 9])
-#xtest = np.delete(xtest, [3, 4, 5, 6, 7, 8, 9], axis=1)
-# ytest = np.delete(ytest, [3, 4, 5, 6, 7, 8, 9])
 
 # Prepare data loader
 xtrain = torch.from_numpy(xtrain)
@@ -162,12 +153,9 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader),
                        loss.item() / len(data)))
-            #print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset)))
-    print("Mu: {} \t logvar: {}".format(mu.shape, logvar.shape))
-    #print("Mu: {} \t logvar: {}".format(mu[0].mean(), logvar[0].mean()))
 
 
 def test(epoch):
@@ -178,14 +166,7 @@ def test(epoch):
             data = data.float().to(device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_function(recon_batch, data, mu, logvar).item()
-            """
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n],
-                                      recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-                save_image(comparison.cpu(),
-                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
-            """
+
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
 
@@ -195,31 +176,26 @@ def main():
         train(epoch)
         test(epoch)
 
-        if args.save_model:
-            if train_only_numerical:
-                torch.save(model.state_dict(), "vae_lime_german_only_numerical.pt")
-            else:
-                torch.save(model.state_dict(), "vae_lime_german.pt")
-
-
+    if args.save_model:
+        if train_only_numerical:
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_only_numerical_test2.pt")
+        else:
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_test2.pt")
 
     with torch.no_grad():
         print("___________________________________________")
         print("Generating 5 new data points using the VAE:\n")
-        sample = torch.randn(10, 30).to(device)
+        sample = torch.randn(3, 30).to(device)
         sample = model.decode(sample).cpu()
 
-        # TODO Inverse transform not one-hot ?!
         inversed = scaler.inverse_transform(sample)
         np.set_printoptions(suppress=True)
-        #print(sample)
-        #print(inversed)
+        # print(sample)
+        # print(inversed)
 
         s = [np.round(i, 0) for i in inversed]
         for a in s:
             print(a)
-
-        # TODO Test how unique the samples truly are
 
 
 if __name__ == "__main__":

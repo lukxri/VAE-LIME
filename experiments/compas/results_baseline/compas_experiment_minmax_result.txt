@@ -1,0 +1,14 @@
+/home/lukas/anaconda3/envs/eml_seminar/bin/python3 /home/lukas/SynologyDrive/Uni/Master/2nd_Semester_SS20/Explainable_and_Fair_Machine_Learning/VAE-LIME/experiments/compas/compas_experiment_vae_lime.py
+['age', 'two_year_recid', 'priors_count', 'length_of_stay', 'c_charge_degree_F', 'c_charge_degree_M', 'sex_Female', 'sex_Male', 'race', 'unrelated_column_one', 'unrelated_column_two']
+---------------------
+Beginning LIME COMPAS Experiments....
+(These take some time to run because we have to generate explanations for every point in the test set)
+---------------------
+LIME Ranks and Pct Occurances (1 corresponds to most important feature) for one unrelated feature:
+{1: [('unrelated_column_one', 1.0)], 2: [('c_charge_degree_F', 0.021035598705501618), ('c_charge_degree_M', 0.03398058252427184), ('race', 0.8300970873786407), ('sex_Female', 0.045307443365695796), ('sex_Male', 0.05177993527508091), ('two_year_recid', 0.011326860841423949), ('unrelated_column_two', 0.006472491909385114)], 3: [('age', 0.0048543689320388345), ('c_charge_degree_F', 0.12297734627831715), ('c_charge_degree_M', 0.11974110032362459), ('length_of_stay', 0.003236245954692557), ('priors_count', 0.016181229773462782), ('race', 0.10517799352750809), ('sex_Female', 0.18932038834951456), ('sex_Male', 0.18122977346278318), ('two_year_recid', 0.1407766990291262), ('unrelated_column_two', 0.11650485436893204)]}
+Fidelity: 0.96
+LIME Ranks and Pct Occurances two unrelated features:
+{1: [('c_charge_degree_F', 0.011326860841423949), ('c_charge_degree_M', 0.008090614886731391), ('length_of_stay', 0.003236245954692557), ('race', 0.01779935275080906), ('sex_Female', 0.01779935275080906), ('sex_Male', 0.038834951456310676), ('two_year_recid', 0.009708737864077669), ('unrelated_column_one', 0.46601941747572817), ('unrelated_column_two', 0.42718446601941745)], 2: [('age', 0.0048543689320388345), ('c_charge_degree_F', 0.05339805825242718), ('c_charge_degree_M', 0.06796116504854369), ('length_of_stay', 0.0016181229773462784), ('priors_count', 0.003236245954692557), ('race', 0.05501618122977346), ('sex_Female', 0.07928802588996764), ('sex_Male', 0.04854368932038835), ('two_year_recid', 0.0372168284789644), ('unrelated_column_one', 0.3284789644012945), ('unrelated_column_two', 0.32038834951456313)], 3: [('age', 0.006472491909385114), ('c_charge_degree_F', 0.0970873786407767), ('c_charge_degree_M', 0.11326860841423948), ('length_of_stay', 0.008090614886731391), ('priors_count', 0.011326860841423949), ('race', 0.11650485436893204), ('sex_Female', 0.18608414239482202), ('sex_Male', 0.13915857605177995), ('two_year_recid', 0.09546925566343042), ('unrelated_column_one', 0.11003236245954692), ('unrelated_column_two', 0.11650485436893204)]}
+Fidelity: 0.97
+
+Process finished with exit code 0

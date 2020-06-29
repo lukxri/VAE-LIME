@@ -1,0 +1,14 @@
+/home/lukas/anaconda3/envs/eml_seminar/bin/python3 /home/lukas/SynologyDrive/Uni/Master/2nd_Semester_SS20/Explainable_and_Fair_Machine_Learning/VAE-LIME/experiments/compas/compas_experiment_vae_lime.py
+['age', 'two_year_recid', 'priors_count', 'length_of_stay', 'c_charge_degree_F', 'c_charge_degree_M', 'sex_Female', 'sex_Male', 'race', 'unrelated_column_one', 'unrelated_column_two']
+---------------------
+Beginning LIME COMPAS Experiments....
+(These take some time to run because we have to generate explanations for every point in the test set)
+---------------------
+LIME Ranks and Pct Occurances (1 corresponds to most important feature) for one unrelated feature:
+{1: [('unrelated_column_one', 1.0)], 2: [('age', 0.07119741100323625), ('c_charge_degree_F', 0.0016181229773462784), ('length_of_stay', 0.627831715210356), ('priors_count', 0.2993527508090615)], 3: [('age', 0.28802588996763756), ('c_charge_degree_F', 0.006472491909385114), ('c_charge_degree_M', 0.0016181229773462784), ('length_of_stay', 0.20388349514563106), ('priors_count', 0.3737864077669903), ('race', 0.021035598705501618), ('sex_Female', 0.09546925566343042), ('sex_Male', 0.008090614886731391), ('unrelated_column_two', 0.0016181229773462784)]}
+Fidelity: 0.96
+LIME Ranks and Pct Occurances two unrelated features:
+{1: [('age', 0.08414239482200647), ('length_of_stay', 0.003236245954692557), ('unrelated_column_one', 0.912621359223301)], 2: [('age', 0.7249190938511327), ('length_of_stay', 0.02912621359223301), ('priors_count', 0.016181229773462782), ('unrelated_column_one', 0.08576051779935275), ('unrelated_column_two', 0.14401294498381878)], 3: [('age', 0.13754045307443366), ('length_of_stay', 0.06310679611650485), ('priors_count', 0.07605177993527508), ('sex_Male', 0.003236245954692557), ('unrelated_column_two', 0.7200647249190939)]}
+Fidelity: 0.98
+
+Process finished with exit code 0
