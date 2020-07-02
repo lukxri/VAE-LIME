@@ -515,6 +515,8 @@ class LimeTabularExplainer(object):
         model.eval()
 
         with torch.no_grad():
+
+            # TODO sample using the latent space mu and sigma!!!
             sample = torch.randn(num_samples, 30).to(device)
 
 
