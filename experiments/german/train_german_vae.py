@@ -13,14 +13,16 @@ from torch.nn import functional as F
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
-from fooling_lime.utils import *
-from fooling_lime.get_data import *
+from fooling_lime import get_data, utils
 
 # Set up experiment parameters
-params = Params("fooling_lime/model_configurations/experiment_params.json")
-X, y, cols = get_and_preprocess_german(params)
+try:
+    params = utils.Params("fooling_lime/model_configurations/experiment_params.json")
+except FileNotFoundError:
+    params = utils.Params("../../fooling_lime/model_configurations/experiment_params.json")
+X, y, cols = get_data.get_and_preprocess_german(params)
 
 features = [c for c in X]
 
@@ -29,19 +31,22 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 
 X = X.values
 
-xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
-ss = StandardScaler().fit(xtrain)
-xtrain = ss.transform(xtrain)
-xtest = ss.transform(xtest)
+train_only_numerical = True
+if train_only_numerical:
+    categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
+                   'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
+                   'MissedPayments', 'NoCurrentLoan', 'CriticalAccountOrLoansElsewhere', 'OtherLoansAtBank',
+                   'OtherLoansAtStore', 'HasCoapplicant', 'HasGuarantor', 'OwnsHouse', 'RentsHouse', 'Unemployed',
+                   'YearsAtCurrentJob_lt_1', 'YearsAtCurrentJob_geq_4', 'JobClassIsSkilled']
+    categorical = [features.index(c) for c in categorical]
+    X = np.delete(X, categorical, axis=1)
+    num_cols = 7
+else:
+    num_cols = 28
 
-#mean_lrpi = np.mean(xtrain[:, loan_rate_indc])
-
-"""categorical = ['Gender', 'ForeignWorker', 'Single', 'HasTelephone', 'CheckingAccountBalance_geq_0',
-               'CheckingAccountBalance_geq_200', 'SavingsAccountBalance_geq_100', 'SavingsAccountBalance_geq_500',
-               'MissedPayments', 'NoCurrentLoan', 'CriticalAccountOrLoansElsewhere', 'OtherLoansAtBank',
-               'OtherLoansAtStore', 'HasCoapplicant', 'HasGuarantor', 'OwnsHouse', 'RentsHouse', 'Unemployed',
-               'YearsAtCurrentJob_lt_1', 'YearsAtCurrentJob_geq_4', 'JobClassIsSkilled']
-categorical = [features.index(c) for c in categorical]"""
+scaler = MinMaxScaler().fit(X)
+X = scaler.transform(X)
+xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.25)
 
 parser = argparse.ArgumentParser(description='VAE LIME')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -54,7 +59,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--save-model', action='store_true', default=False,
+parser.add_argument('--save-model', action='store_true', default=True,
                     help='For Saving the current Model')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -77,43 +82,51 @@ test_dataset = TensorDataset(xtest, ytest)
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, **kwargs)
 
+
 class VAE(nn.Module):
-    def __init__(self):
+    def __init__(self, num_cols):
         super(VAE, self).__init__()
 
+        self.num_cols = num_cols
         # TODO neural net hyper-parameters
-        self.fc1 = nn.Linear(28, 14)
-        self.fc21 = nn.Linear(14, 4)
-        self.fc22 = nn.Linear(14, 4)
-        self.fc3 = nn.Linear(4, 14)
-        self.fc4 = nn.Linear(14, 28)
+        """self.fc1 = nn.Linear(28, 400)
+        self.fc21 = nn.Linear(400, 20)
+        self.fc22 = nn.Linear(400, 20)
+        self.fc3 = nn.Linear(20, 400)
+        self.fc4 = nn.Linear(400, 28)"""
+
+        self.fc1 = nn.Linear(self.num_cols, 60)
+        self.fc21 = nn.Linear(60, 30)
+        self.fc22 = nn.Linear(60, 30)
+        self.fc3 = nn.Linear(30, 60)
+        self.fc4 = nn.Linear(60, self.num_cols)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
         return self.fc21(h1), self.fc22(h1)
 
     def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5*logvar)
+        std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
-        return mu + eps*std
+        return mu + eps * std
 
     def decode(self, z):
         h3 = F.relu(self.fc3(z))
         return torch.sigmoid(self.fc4(h3))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 28))
+        mu, logvar = self.encode(x.view(-1, self.num_cols))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
 
-model = VAE().to(device)
+model = VAE(num_cols).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28), reduction='sum')
+    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -138,11 +151,11 @@ def train(epoch):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
+                       100. * batch_idx / len(train_loader),
+                       loss.item() / len(data)))
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
+        epoch, train_loss / len(train_loader.dataset)))
 
 
 def test(epoch):
@@ -153,14 +166,7 @@ def test(epoch):
             data = data.float().to(device)
             recon_batch, mu, logvar = model(data)
             test_loss += loss_function(recon_batch, data, mu, logvar).item()
-            """
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n],
-                                      recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-                save_image(comparison.cpu(),
-                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
-            """
+
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
 
@@ -170,20 +176,26 @@ def main():
         train(epoch)
         test(epoch)
 
-        if args.save_model:
-            torch.save(model.state_dict(), "vae_lime.pt")
-        with torch.no_grad():
-            sample = torch.randn(3, 4).to(device)
-            sample = model.decode(sample).cpu()
-            
-            # TODO Inverse transform not one-hot ?!
-            inversed = ss.inverse_transform(sample)
-            print(sample)
-            print(inversed)
-        """
-        save_image(sample.view(64, 1, 28, 28),
-                   'results/sample_' + str(epoch) + '.png')
-        """
+    if args.save_model:
+        if train_only_numerical:
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_only_numerical_test2.pt")
+        else:
+            torch.save(model.state_dict(), "experiments/german/vae_lime_german_test2.pt")
+
+    with torch.no_grad():
+        print("___________________________________________")
+        print("Generating 5 new data points using the VAE:\n")
+        sample = torch.randn(3, 30).to(device)
+        sample = model.decode(sample).cpu()
+
+        inversed = scaler.inverse_transform(sample)
+        np.set_printoptions(suppress=True)
+        # print(sample)
+        # print(inversed)
+
+        s = [np.round(i, 0) for i in inversed]
+        for a in s:
+            print(a)
 
 
 if __name__ == "__main__":

@@ -4,28 +4,29 @@ The experiment MAIN for GERMAN.
 import warnings
 warnings.filterwarnings('ignore') 
 
-from adversarial_models import * 
-from utils import *
-from get_data import *
+from fooling_lime.adversarial_models import *
+from fooling_lime.utils import *
+from fooling_lime.get_data import *
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 import numpy as np
 import pandas as pd
 
+# use modified lime package of the repository here, not the pip version!
 from lime.lime import *
-from lime.lime import lime_tabular
-#import lime
-#import lime.lime_tabular
-import shap
+from lime.lime import lime_tabular_with_vae
 
-from sklearn.cluster import KMeans 
+from sklearn.cluster import KMeans
 
 from copy import deepcopy
 
 # Set up experiment parameters
-params = Params("model_configurations/experiment_params.json")
+try:
+    params = Params("fooling_lime/model_configurations/experiment_params.json")
+except FileNotFoundError:
+    params = Params("../../fooling_lime/model_configurations/experiment_params.json")
 X, y, cols = get_and_preprocess_german(params)
 
 features = [c for c in X]
@@ -36,7 +37,7 @@ loan_rate_indc = features.index('LoanRateAsPercentOfIncome')
 X = X.values
 
 xtrain,xtest,ytrain,ytest = train_test_split(X,y,test_size=0.1)
-ss = StandardScaler().fit(xtrain)
+ss = MinMaxScaler().fit(xtrain)
 xtrain = ss.transform(xtrain)
 xtest = ss.transform(xtest)
 
@@ -85,7 +86,7 @@ def experiment_main():
 
 	# Train the adversarial model for LIME with f and psi 
 	adv_lime = Adversarial_Lime_Model(racist_model_f(), innocuous_model_psi()).train(xtrain, ytrain, feature_names=features, perturbation_multiplier=30, categorical_features=categorical)
-	adv_explainer = lime.lime_tabular.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
+	adv_explainer = lime_tabular_with_vae.LimeTabularExplainer(xtrain, feature_names=adv_lime.get_column_names(), discretize_continuous=False, categorical_features=categorical)
                                                
 	explanations = []
 	for i in range(xtest.shape[0]):
@@ -96,7 +97,7 @@ def experiment_main():
 	print (experiment_summary(explanations, features))
 	print ("Fidelity:", round(adv_lime.fidelity(xtest),2))
 
-	
+	"""
 	print ('---------------------')
 	print ('Beginning SHAP GERMAN Experiments....')
 	print ('---------------------')
@@ -117,7 +118,7 @@ def experiment_main():
 	print (experiment_summary(formatted_explanations, features))
 	print ("Fidelity:",round(adv_shap.fidelity(xtest),2))
 
-	print ('---------------------')
+	print ('---------------------')"""
 
 if __name__ == "__main__":
 	experiment_main()
