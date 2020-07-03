@@ -1,0 +1,10 @@
+top_rank,name,percent,no.unrelated_features
+1,Nothingshown,1.0,1
+2,Nothingshown,1.0,1
+3,Nothingshown,1.0,1
+1,Nothingshown,0.995,2
+1,PctBornSameStatenumeric,0.005,2
+2,Nothingshown,0.995,2
+2,populationnumeric,0.005,2
+3,Nothingshown,0.995,2
+3,numbUrbannumeric,0.005,2
