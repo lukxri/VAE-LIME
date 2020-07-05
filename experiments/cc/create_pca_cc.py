@@ -16,10 +16,10 @@ X['unrelated_column_one'] = np.random.choice([0, 1], size=X.shape[0])
 X['unrelated_column_two'] = np.random.choice([0, 1], size=X.shape[0])
 features = [c for c in X]
 
-#race_indc = features.index('race')
+# race_indc = features.index('race')
 
 X = X.values
-#categorical = [features.index('c_charge_degree_F'), features.index('c_charge_degree_M'), features.index('two_year_recid'),
+# categorical = [features.index('c_charge_degree_F'), features.index('c_charge_degree_M'), features.index('two_year_recid'),
 #          features.index('race'), features.index("sex_Male"), features.index("sex_Female")]
 
 
@@ -27,7 +27,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 numerical_only = False
 if numerical_only:
-    #X = np.delete(X, categorical, axis=1)
+    # X = np.delete(X, categorical, axis=1)
 
     model = VAE(X.shape[1]).to(device)
     model.load_state_dict(torch.load("./vae_lime_cc_only_numerical.pt"))
@@ -42,7 +42,7 @@ ss = MinMaxScaler().fit(X)
 X = ss.transform(X)
 
 print(X.shape)
-#print(np.asarray(X).dtype)
+# print(np.asarray(X).dtype)
 num_samples = X.shape[0]
 num_cols = X.shape[1]
 
@@ -51,16 +51,15 @@ with torch.no_grad():
     # print("___________________________________________")
     # print("Generating 5 new data points using the VAE:\n")
     sample = torch.randn(num_samples, 30).to(device)
-
-    # TODO Idea: Encode data row once, and sample from generated latent space.
     sample = model.decode(sample).cpu()
     data = sample.cpu().numpy().reshape(-1, num_cols)
 
-    #data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
+    # data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
     # data = ss.inverse_transform(data)
     X_p = data
     r.append(X_p)
 
+# old perturbation sampling
 """r = []
 for _ in range(1):
     p = np.random.normal(0, 1, size=X.shape)

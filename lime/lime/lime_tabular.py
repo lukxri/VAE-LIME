@@ -508,8 +508,7 @@ class LimeTabularExplainer(object):
                 instance_sample = data_row[:, non_zero_indexes]
                 scale = scale[non_zero_indexes]
                 mean = mean[non_zero_indexes]
-            
-            #TODO Replace N(0,1) sampling by VAE decoding
+
             data = self.random_state.normal(
                 0, 1, num_samples * num_cols).reshape(
                 num_samples, num_cols)
@@ -541,8 +540,7 @@ class LimeTabularExplainer(object):
         for column in categorical_features:
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
-            
-            #TODO Does this need to be replaced aswell?
+
             inverse_column = self.random_state.choice(values, size=num_samples,
                                                       replace=True, p=freqs)
             binary_column = (inverse_column == first_row[column]).astype(int)

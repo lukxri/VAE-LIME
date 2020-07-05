@@ -43,25 +43,6 @@ print(np.asarray(X).dtype)
 num_samples = X.shape[0]
 num_cols = X.shape[1]
 
-"""r = []
-with torch.no_grad():
-    #for x in X:
-    # print("___________________________________________")
-    # print("Generating 5 new data points using the VAE:\n")
-    # sample = torch.randn(num_samples, 30).to(device)
-
-    # TODO Idea: Encode data row once, and sample from generated latent space.
-    # sample = model.decode(sample).cpu()
-
-    #x = np.asarray(x, dtype=np.float32)
-    sample, _, _ = model.forward(torch.from_numpy(np.asarray(X[0, :], dtype=np.float32)).to(device))
-    data = sample.cpu().numpy().reshape(-1, num_cols)
-
-    data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
-    # data = ss.inverse_transform(data)
-    X_p = data
-    r.append(X_p)"""
-
 r = []
 with torch.no_grad():
     # print("___________________________________________")
@@ -72,11 +53,12 @@ with torch.no_grad():
     X = np.asarray(X, dtype=np.float32)
     data = sample.cpu().numpy().reshape(-1, num_cols)
 
-    #data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
+    # data[:, categorical] = [np.round(i, 0) for i in data[:, categorical]]
     # data = ss.inverse_transform(data)
     X_p = data
     r.append(X_p)
 
+# old perturbation sampling
 """r = []
 for _ in range(1):
     p = np.random.normal(0, 1, size=X.shape)
@@ -106,8 +88,8 @@ print(len(X))
 plt.scatter(results[:500, 0], results[:500, 1], alpha=.3, c="r", label="VAE generated data")
 plt.scatter(results[-500:, 0], results[-500:, 1], alpha=.3, c="b", label="Original data")
 plt.legend()
-plt.xlim(-4,4)
-plt.ylim(-4,4)
+plt.xlim(-4, 4)
+plt.ylim(-4, 4)
 
 if numerical_only:
     plt.title("VAE-LIME German data | Numerical features")

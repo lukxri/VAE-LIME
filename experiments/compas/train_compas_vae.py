@@ -33,7 +33,7 @@ unrelated_indcs1 = features.index('unrelated_column_two')
 
 X = X.values
 
-train_only_numerical = True
+train_only_numerical = False
 if train_only_numerical:
     categorical = [features.index('c_charge_degree_F'), features.index('c_charge_degree_M'),
               features.index('two_year_recid'),
@@ -49,7 +49,7 @@ xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.1)
 parser = argparse.ArgumentParser(description='VAE LIME')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -86,13 +86,6 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
 
         self.num_cols = num_cols
-        # TODO neural net hyper-parameters
-        """self.fc1 = nn.Linear(28, 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, 28)"""
-
         self.fc1 = nn.Linear(self.num_cols, 60)
         self.fc21 = nn.Linear(60, 30)
         self.fc22 = nn.Linear(60, 30)
@@ -177,7 +170,7 @@ def main():
         if train_only_numerical:
             torch.save(model.state_dict(), "./vae_lime_compas_only_numerical.pt")
         else:
-            torch.save(model.state_dict(), "./vae_lime_compas.pt")
+            torch.save(model.state_dict(), "./vae_lime_compas_2.pt")
 
     with torch.no_grad():
         print("___________________________________________")
