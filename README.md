@@ -3,8 +3,8 @@ Seminar "Explainable and Fair Machine Learning" - Summer Term 2020 - University 
 
 ## Setup
 ```
-conda creante -n efml_sem python=3.7 -y  
-conda activate efml_sem  
+conda creante -n vae_lime python=3.7 -y  
+conda activate vae_lime  
 pip install -r requirements.txt  
 ```  
 
@@ -15,6 +15,8 @@ pip install -r requirements.txt
     * Has the the PCA data distribution improved? 
     * Can VAE-LIME explain the adversarial attack?
 * Repeat for other datasets
+
+The feature importance ranking plots where created [here](https://docs.google.com/spreadsheets/d/1xvP-7lWBjuXq95PpS93IuDAch26qeGMF8VSChvfy-MM/edit?usp=sharing)
 
 ### Ideas for future work
 * Optimize Network structure, maybe try conv2D instead of dense
