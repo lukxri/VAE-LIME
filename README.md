@@ -9,6 +9,9 @@ pip install -r requirements.txt
 ```  
 
 ## Method
+
+All of our contributions can be found in ``experiments/``.
+
 * Train the variational autoencoder on the german credit card dataset (``train_german_vae.py``)
 * Replace the lime sampling with the trained vae.
 * Rerun the adversarial attack:
