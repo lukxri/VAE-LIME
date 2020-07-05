@@ -95,10 +95,10 @@ class TableDomainMapper(explanation.DomainMapper):
                                     fweights))
             else:
                 out_dict = dict(map(lambda x: (x[0], (x[1], x[2], x[3])),
-                                zip(self.feature_indexes,
-                                    fnames,
-                                    self.feature_values,
-                                    fweights)))
+                                    zip(self.feature_indexes,
+                                        fnames,
+                                        self.feature_values,
+                                        fweights)))
                 out_list = [out_dict.get(x[0], (str(x[0]), 0.0, 0.0)) for x in exp]
         else:
             out_list = list(zip(self.exp_feature_names,
@@ -213,19 +213,19 @@ class LimeTabularExplainer(object):
 
             if discretizer == 'quartile':
                 self.discretizer = QuartileDiscretizer(
-                        training_data, self.categorical_features,
-                        self.feature_names, labels=training_labels,
-                        random_state=self.random_state)
+                    training_data, self.categorical_features,
+                    self.feature_names, labels=training_labels,
+                    random_state=self.random_state)
             elif discretizer == 'decile':
                 self.discretizer = DecileDiscretizer(
-                        training_data, self.categorical_features,
-                        self.feature_names, labels=training_labels,
-                        random_state=self.random_state)
+                    training_data, self.categorical_features,
+                    self.feature_names, labels=training_labels,
+                    random_state=self.random_state)
             elif discretizer == 'entropy':
                 self.discretizer = EntropyDiscretizer(
-                        training_data, self.categorical_features,
-                        self.feature_names, labels=training_labels,
-                        random_state=self.random_state)
+                    training_data, self.categorical_features,
+                    self.feature_names, labels=training_labels,
+                    random_state=self.random_state)
             elif isinstance(discretizer, BaseDiscretizer):
                 self.discretizer = discretizer
             else:
@@ -235,7 +235,7 @@ class LimeTabularExplainer(object):
             self.categorical_features = list(range(training_data.shape[1]))
 
             # Get the discretized_training_data when the stats are not provided
-            if(self.training_data_stats is None):
+            if (self.training_data_stats is None):
                 discretized_training_data = self.discretizer.discretize(
                     training_data)
 
@@ -301,7 +301,8 @@ class LimeTabularExplainer(object):
                          num_features=10,
                          num_samples=5000,
                          distance_metric='euclidean',
-                         model_regressor=None):
+                         model_regressor=None,
+                         dataset = "german"):
         """Generates explanations for a prediction.
 
         First, we generate neighborhood data by randomly perturbing features
@@ -329,6 +330,7 @@ class LimeTabularExplainer(object):
             model_regressor: sklearn regressor to use in explanation. Defaults
                 to Ridge regression in LimeBase. Must have model_regressor.coef_
                 and 'sample_weight' as a parameter to model_regressor.fit()
+            dataset: Dataset on which the variational autoencoder was trained.
 
         Returns:
             An Explanation object (see explanation.py) with the corresponding
@@ -338,9 +340,9 @@ class LimeTabularExplainer(object):
             # Preventative code: if sparse, convert to csr format if not in csr format already
             data_row = data_row.tocsr()
 
-        # TODO CHANCE HERE TO DEBUG
-        #data, inverse = self.__data_inverse(data_row, num_samples) # old sampling
-        data, inverse = self.__data_inverse_vae_sampling(data_row, num_samples) # new sampling
+        # CHANCE HERE TO DEBUG
+        # data, inverse = self.__data_inverse(data_row, num_samples) # old sampling
+        data, inverse = self.__data_inverse_vae_sampling(data_row, num_samples, dataset)  # new sampling
         if sp.sparse.issparse(data):
             # Note in sparse case we don't subtract mean since data would become dense
             scaled_data = data.multiply(self.scaler.scale_)
@@ -350,9 +352,9 @@ class LimeTabularExplainer(object):
         else:
             scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
         distances = sklearn.metrics.pairwise_distances(
-                scaled_data,
-                scaled_data[0].reshape(1, -1),
-                metric=distance_metric
+            scaled_data,
+            scaled_data[0].reshape(1, -1),
+            metric=distance_metric
         ).ravel()
 
         yss = predict_fn(inverse)
@@ -427,7 +429,7 @@ class LimeTabularExplainer(object):
             discretized_feature_names = copy.deepcopy(feature_names)
             for f in self.discretizer.names:
                 discretized_feature_names[f] = self.discretizer.names[f][int(
-                        discretized_instance[f])]
+                    discretized_instance[f])]
 
         domain_mapper = TableDomainMapper(feature_names,
                                           values,
@@ -453,13 +455,13 @@ class LimeTabularExplainer(object):
             (ret_exp.intercept[label],
              ret_exp.local_exp[label],
              ret_exp.score, ret_exp.local_pred) = self.base.explain_instance_with_data(
-                    scaled_data,
-                    yss,
-                    distances,
-                    label,
-                    num_features,
-                    model_regressor=model_regressor,
-                    feature_selection=self.feature_selection)
+                scaled_data,
+                yss,
+                distances,
+                label,
+                num_features,
+                model_regressor=model_regressor,
+                feature_selection=self.feature_selection)
 
         if self.mode == "regression":
             ret_exp.intercept[1] = ret_exp.intercept[0]
@@ -468,14 +470,14 @@ class LimeTabularExplainer(object):
 
         return ret_exp
 
-
-    def __data_inverse_vae_sampling(self, data_row, num_samples):
+    def __data_inverse_vae_sampling(self, data_row, num_samples, dataset="german"):
         """
         New sampling method which makes use of the trained variational autoencoder.
 
         Args:
             data_row: 1d numpy array, corresponding to a row
             num_samples: size of the neighborhood to learn the linear model
+            dataset: Dataset on which the variational autoencoder was trained.
 
         Returns:
             A tuple (data, inverse), where:
@@ -485,13 +487,11 @@ class LimeTabularExplainer(object):
                 inverse: same as data, except the categorical features are not
                 binary, but categorical (as the original data)
 
-        Returns:
-            data:       First row is same as data_row. Categorical features are binary
-                        (1 if they are the same as data_row, 0 if they differ). Numerical features stay the same.
-            inverse:    Same as data, but the categorical features are not compared to data_row, but stay as is.
+        Raises:
+            FileNotFoundError The VAE model of the given dataset can not be found and loaded.
         """
 
-        # TODO NEXT STEPS
+        # NEXT STEPS
         # Later: Categorical sampling improvements? https://blog.evjang.com/2016/11/tutorial-categorical-variational.html
         # Or look into the numerical features only?
 
@@ -506,23 +506,28 @@ class LimeTabularExplainer(object):
 
         ##############################################
         # Insert VAE Sampling here
-        # TODO do not hardcode which vae to load here
-        from train_cc_vae import VAE
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        if dataset == "german":
+            from train_german_vae import VAE
+        elif dataset == "compas":
+            from train_compas_vae import VAE
+        elif dataset == "cc":
+            from train_cc_vae import VAE
+        else:
+            raise FileNotFoundError("Please state one of the following datasets [german, compas, cc] and make sure"
+                                    "that the respective VAE model exists.")
 
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         model = VAE(data_row.shape[0]).to(device)
-        model.load_state_dict(torch.load("../../experiments/cc/vae_lime_cc.pt"))
+        model.load_state_dict(torch.load("../../experiments/{0}/vae_lime_{0}.pt".format(dataset)))
         model.eval()
 
         with torch.no_grad():
 
-            # TODO sample using the latent space mu and sigma!!!
             sample = torch.randn(num_samples, 30).to(device)
 
-
             # Test Idea: Encode data row once, and sample from generated latent space.
-            #x = np.asarray(data_row, dtype=np.float32)
-            #for i in range(num_samples):
+            # x = np.asarray(data_row, dtype=np.float32)
+            # for i in range(num_samples):
             #    sample, _, _ = model.forward(torch.from_numpy(x).to(device))
             #    data[i] = sample.cpu().numpy().reshape(-1, num_cols)
 
@@ -530,10 +535,10 @@ class LimeTabularExplainer(object):
 
             sample = model.decode(sample).cpu()
             data = sample.numpy().reshape(num_samples, num_cols)
-            #data = [np.round(i, 0) for i in data]
+            # data = [np.round(i, 0) for i in data]
         ##############################################
 
-        #data = self.random_state.normal(
+        # data = self.random_state.normal(
         #    0, 1, num_samples * num_cols).reshape(
         #    num_samples, num_cols)
         if self.sample_around_instance:
@@ -541,7 +546,7 @@ class LimeTabularExplainer(object):
         else:
             data = data * scale + mean
 
-        # TODO Convert categorical sample columns to 0-1
+        # Convert categorical sample columns to 0-1
         # Decide how to handle scaling here. I want to keep the scaling as is.
         # They mainly exploited numerical values. Think about the implications here for our approach.
 
@@ -550,13 +555,12 @@ class LimeTabularExplainer(object):
         data[0] = data_row.copy()
         inverse = data.copy()
         for column in categorical_features:
-            #data[:, column] = utils.one_hot_encode(data[:, column])
+            # data[:, column] = utils.one_hot_encode(data[:, column])
             data[:, column] = np.round(data[:, column])
             values = self.feature_values[column]
             freqs = self.feature_frequencies[column]
 
-
-            #inverse_column = self.random_state.choice(values, size=num_samples,
+            # inverse_column = self.random_state.choice(values, size=num_samples,
             #                                          replace=True, p=freqs)
 
             # Here we NEED to copy!
@@ -720,7 +724,7 @@ class RecurrentTabularExplainer(LimeTabularExplainer):
         # Reshape X
         n_samples, n_timesteps, n_features = training_data.shape
         training_data = np.transpose(training_data, axes=(0, 2, 1)).reshape(
-                n_samples, n_timesteps * n_features)
+            n_samples, n_timesteps * n_features)
         self.n_timesteps = n_timesteps
         self.n_features = n_features
 
@@ -730,20 +734,20 @@ class RecurrentTabularExplainer(LimeTabularExplainer):
 
         # Send off the the super class to do its magic.
         super(RecurrentTabularExplainer, self).__init__(
-                training_data,
-                mode=mode,
-                training_labels=training_labels,
-                feature_names=feature_names,
-                categorical_features=categorical_features,
-                categorical_names=categorical_names,
-                kernel_width=kernel_width,
-                kernel=kernel,
-                verbose=verbose,
-                class_names=class_names,
-                feature_selection=feature_selection,
-                discretize_continuous=discretize_continuous,
-                discretizer=discretizer,
-                random_state=random_state)
+            training_data,
+            mode=mode,
+            training_labels=training_labels,
+            feature_names=feature_names,
+            categorical_features=categorical_features,
+            categorical_names=categorical_names,
+            kernel_width=kernel_width,
+            kernel=kernel,
+            verbose=verbose,
+            class_names=class_names,
+            feature_selection=feature_selection,
+            discretize_continuous=discretize_continuous,
+            discretizer=discretizer,
+            random_state=random_state)
 
     def _make_predict_proba(self, func):
         """
